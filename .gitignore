@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+data/vault.enc
+backup/vault_backup.enc
+*.log
