@@ -73,20 +73,28 @@ PASS_FILE = VAULT_DIR / ".vault_pass"
 
 def hash_password(password: str) -> str:
     return hashlib.sha256(password.encode()).hexdigest()
+def set_master_password_initial(new_password: str):
+    """Set a master password for the first time."""
+    key = generate_key(new_password)
+    save_vault({}, key)  # Save empty vault
 
-def set_master_password_securely(old_password: str, new_password: str):
+    with open(PASS_FILE, "w") as f:
+        f.write(hash_password(new_password))
+
+    print("🔐 Master password set successfully.")
+
+def set_master_password(old_password: str, new_password: str):
+    """Change an existing master password."""
     if not validate_master_password(old_password):
         print("❌ Incorrect current master password. Aborting.")
         return
 
-    # Re-encrypt existing vault with new key
     old_key = generate_key(old_password)
     vault_data = load_vault(old_key)
 
     new_key = generate_key(new_password)
     save_vault(vault_data, new_key)
 
-    # Save new hashed password
     with open(PASS_FILE, "w") as f:
         f.write(hash_password(new_password))
 
@@ -100,3 +108,16 @@ def validate_master_password(password: str) -> bool:
     with open(PASS_FILE, "r") as f:
         stored_hash = f.read().strip()
     return hash_password(password) == stored_hash
+
+def get_entry(name: str, key: bytes) -> dict | None:
+    """Returns a specific entry from the vault by name."""
+    vault = load_vault(key)
+    return vault.get(name)
+
+def filter_entries(query: str, vault: dict) -> dict:
+    """Returns entries whose names contain the query substring."""
+    result = {}
+    for name, entry in vault.items():
+        if query.lower() in name.lower():
+            result[name] = entry
+    return result

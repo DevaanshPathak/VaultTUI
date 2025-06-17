@@ -2,6 +2,10 @@ import argparse
 import getpass
 import config
 from config import VAULT_FILE, VAULT_DIR
+import os
+import getpass
+
+PASS_FILE = VAULT_DIR / ".vault_pass"
 
 from utils import (
     generate_key,
@@ -11,10 +15,50 @@ from utils import (
     save_vault,
     backup_vault,
     restore_vault,
-    set_master_password_securely,
+    set_master_password,
     validate_master_password,
+    get_entry,
+    filter_entries,
 )
-from config import VAULT_FILE
+
+def edit_entry_command(args):
+    password = prompt_password()
+    key = generate_key(password)
+    vault = load_vault(key)
+
+    if args.name not in vault:
+        print(f"❌ Entry '{args.name}' not found.")
+        return
+
+    print(f"📝 Editing entry '{args.name}':")
+    current = vault[args.name]
+
+    new_username = input(f"New username [{current['username']}]: ") or current['username']
+    new_password = getpass.getpass("New password (leave blank to keep current): ") or current['password']
+
+    vault[args.name] = {
+        "username": new_username,
+        "password": new_password
+    }
+
+    save_vault(vault, key)
+    print(f"✅ Entry '{args.name}' updated successfully.")
+
+def search_entries_command(args):
+    password = prompt_password()
+    key = generate_key(password)
+    vault = load_vault(key)
+
+    from utils import filter_entries
+    results = filter_entries(args.query, vault)
+
+    if not results:
+        print(f"❌ No entries found for '{args.query}'.")
+        return
+
+    print(f"🔍 Results for '{args.query}':")
+    for name in results:
+        print(f"- {name}")
 
 def prompt_password():
     return getpass.getpass("Enter master password: ")
@@ -38,13 +82,12 @@ def add_entry(args):
 def view_entry(args):
     password = prompt_password()
     key = generate_key(password)
-    vault = load_vault(key)
 
-    if args.name not in vault:
+    entry = get_entry(args.name, key)
+    if not entry:
         print(f"❌ Entry '{args.name}' not found.")
         return
 
-    entry = vault[args.name]
     print(f"🔐 {args.name}:")
     print(f"   Username: {entry['username']}")
     print(f"   Password: {entry['password']}")
@@ -88,18 +131,33 @@ def handle_backup(args):
 def handle_restore(args):
     restore_vault()
     print("📦 Vault restored from backup.")
-
+    
 def handle_set_password(args):
+    if not PASS_FILE.exists():
+        # First-time setup
+        print("🔐 No existing password found. Setting up a new master password.")
+        new_pw = getpass.getpass("Set master password: ")
+        confirm_pw = getpass.getpass("Confirm master password: ")
+        if new_pw != confirm_pw:
+            print("❌ Passwords do not match.")
+            return
+        from utils import set_master_password_initial
+        set_master_password_initial(new_pw)
+        return
+
+    # Password change flow
     old_pw = getpass.getpass("Enter current master password: ")
+    if not validate_master_password(old_pw):
+        print("❌ Incorrect current master password. Aborting.")
+        return
+
     new_pw = getpass.getpass("Enter new master password: ")
     confirm_pw = getpass.getpass("Confirm new master password: ")
-
     if new_pw != confirm_pw:
         print("❌ Passwords do not match.")
         return
 
-    set_master_password_securely(old_pw, new_pw)
-
+    set_master_password(old_pw, new_pw)
 
 # CLI Setup
 parser = argparse.ArgumentParser(description="🔐 VaultTUI - Encrypted CLI Password Manager")
@@ -117,6 +175,12 @@ view_parser = subparsers.add_parser("view", help="View an entry")
 view_parser.add_argument("name", help="Entry name")
 view_parser.set_defaults(func=view_entry)
 
+# Get
+get_parser = subparsers.add_parser("get", help="Get an entry (alias for view)")
+get_parser.add_argument("name", help="Entry name")
+get_parser.set_defaults(func=view_entry)
+
+
 # Delete
 delete_parser = subparsers.add_parser("delete", help="Delete an entry")
 delete_parser.add_argument("name", help="Entry name")
@@ -129,7 +193,7 @@ list_parser.set_defaults(func=list_entries)
 # Search
 search_parser = subparsers.add_parser("search", help="Search entries")
 search_parser.add_argument("query", help="Search query")
-search_parser.set_defaults(func=search_entries)
+search_parser.set_defaults(func=search_entries_command)
 
 # Backup
 backup_parser = subparsers.add_parser("backup", help="Backup the vault")
@@ -143,6 +207,41 @@ restore_parser.set_defaults(func=handle_restore)
 setpass_parser = subparsers.add_parser("set-password", help="Set or change master password")
 setpass_parser.add_argument("new_password", help="New master password")
 setpass_parser.set_defaults(func=handle_set_password)
+
+# Edit
+edit_parser = subparsers.add_parser("edit", help="Edit an existing entry")
+edit_parser.add_argument("name", help="Entry name to edit")
+edit_parser.set_defaults(func=edit_entry_command)
+
+def handle_add_entry(args):
+    from utils import validate_master_password, generate_key, load_vault, save_vault
+
+    password = input("Enter master password: ")
+    if not validate_master_password(password):
+        print("❌ Incorrect master password.")
+        return
+
+    key = generate_key(password)
+    vault = load_vault(key)
+
+    if args.name in vault:
+        print(f"⚠️ Entry '{args.name}' already exists. Use a different name or delete it first.")
+        return
+
+    vault[args.name] = {
+        "username": args.username,
+        "password": args.password,
+    }
+
+    save_vault(vault, key)
+    print(f"✅ Entry '{args.name}' added successfully.")
+
+# argparse command setup
+parser_add = subparsers.add_parser("add-entry", help="Add a new entry")
+parser_add.add_argument("name", help="Entry name (e.g., github)")
+parser_add.add_argument("username", help="Username for the entry")
+parser_add.add_argument("password", help="Password for the entry")
+parser_add.set_defaults(func=handle_add_entry)
 
 # Run
 args = parser.parse_args()
