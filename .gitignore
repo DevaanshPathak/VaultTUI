@@ -3,3 +3,5 @@ __pycache__/
 data/vault.enc
 backup/vault_backup.enc
 *.log
+day3.md
+vault_export.csv
