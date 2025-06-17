@@ -1,6 +1,3 @@
-:spiral_calendar_pad: Day 2 – TUI Interface + Final Polish
-:alarm_clock: Total Time: ~6–8 hours
-
 :white_check_mark: Checkpoint 6: Basic Textual TUI Setup (1 hr)
  Create tui.py using textual
  Basic layout: sidebar or topbar with options (Add, View, Delete, Search)

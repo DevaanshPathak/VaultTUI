@@ -121,3 +121,19 @@ def filter_entries(query: str, vault: dict) -> dict:
         if query.lower() in name.lower():
             result[name] = entry
     return result
+
+def delete_entry_manual(name, vault):
+    if name not in vault:
+        print(f"❌ Entry '{name}' not found.")
+        return False
+
+    del vault[name]
+    print(f"🗑️ Entry '{name}' deleted.")
+    return True
+
+def search_entries_manual(query, vault):
+    return {
+        name: entry
+        for name, entry in vault.items()
+        if query.lower() in name.lower()
+    }
