@@ -1,98 +1,100 @@
-# 🔐 VaultTUI - Encrypted CLI Password Manager
+# 🔐 VaultTUI
 
-VaultTUI is a secure, command-line-based password manager built in Python. It uses AES encryption (via Fernet) to protect your data and offers a text-based UI and CLI interface for managing credentials locally — offline, encrypted, and private.
+A secure, offline password and secrets vault with both **Command Line Interface (CLI)** and **Text User Interface (TUI)** built in Python. Easily store, search, view, and delete credentials — all encrypted with a master password.
 
 ---
 
-## ✅ Day 1 Progress (CLI Interface)
+## ✨ Features
 
-### 🚀 Features Implemented
+- 🧪 AES256 Encryption using `cryptography.fernet`
+- 🧠 Master password-based access
+- 🖥️ Interactive TUI built with `textual`
+- 🧾 CLI for quick access and scripting
+- 🔍 Fuzzy search functionality
+- 📝 Add, View, Delete entries
+- 👁️ Masked password input & output toggle
+- ⌨️ Keyboard Shortcuts in TUI
+- 💾 Backup/Restore support (WIP)
 
-#### 1. Master Password Management
-- 🔐 Password-protected access to the vault
-- Password hashing with SHA-256
-- First-time password setup and password change functionality
-- Vault data is re-encrypted when password changes
+---
 
-#### 2. CLI Commands via `argparse`
-All commands prompt for the master password and provide user-friendly output:
-```bash
-python vault.py [command] [args...]
+## 🗂 Directory Structure
+
+```
+
+VaultTUI/
+├── main.py              # Launches the TUI
+├── cli.py               # Handles CLI commands
+├── vault.py             # Vault data operations
+├── utils.py             # Encryption, validation, helpers
+├── tui.css              # Textual UI styling
+├── requirements.txt
+└── README.md
+
 ````
 
-#### Available Commands:
+---
 
-| Command        | Description                       |
-| -------------- | --------------------------------- |
-| `add`          | Add a new entry                   |
-| `get` / `view` | View an entry by name             |
-| `delete`       | Delete an entry                   |
-| `list`         | List all entries                  |
-| `search`       | Search entries by keyword         |
-| `edit`         | Edit an existing entry            |
-| `backup`       | Backup the encrypted vault        |
-| `restore`      | Restore the most recent backup    |
-| `set-password` | Set or change the master password |
+## 🚀 Getting Started
 
-#### Example:
+### 1. Install dependencies
 
 ```bash
-python vault.py add github user123 pass123
-python vault.py get github
-python vault.py search git
-python vault.py delete github
+pip install -r requirements.txt
+````
+
+### 2. Run TUI
+
+```bash
+python main.py
+```
+
+### 3. Run CLI
+
+```bash
+python cli.py add github --username myuser --password mypass
+python cli.py view github
+python cli.py delete github
+python cli.py search git
 ```
 
 ---
 
-## 🗄️ Vault Storage
+## 🔐 Master Password
 
-* Data is stored in an encrypted JSON format using `cryptography.fernet`
-* Only the correct master password can decrypt the vault
+The master password is used to generate the encryption key. It must be **memorized** — if you forget it, your vault can't be decrypted!
 
----
-
-## 💾 Backup & Restore
-
-* `backup_vault()` automatically saves timestamped backups of your vault
-* `restore_vault()` restores the latest backup if available
+> ⚠️ Never share your master password. Keep backups of your vault file separately and securely.
 
 ---
 
-## 📁 Project Structure
+## ⌨️ TUI Keyboard Shortcuts
 
-```
-VaultTUI/
-│
-├── vault.py             # CLI interface using argparse
-├── utils.py             # Encryption, decryption, vault IO, password logic
-├── config.py            # File paths (vault file, backups, etc.)
-├── vault_data.enc       # Encrypted vault file (auto-created)
-├── backups/             # Stores timestamped vault backups
-└── .vault_pass          # Stores hashed master password (SHA-256)
-```
+| Key     | Action                |
+| ------- | --------------------- |
+| `ESC`   | Exit the app          |
+| `/`     | Open search form      |
+| `Enter` | Submit form actions   |
+| `Home`  | Return to home screen |
 
 ---
 
-## 🧠 Concepts Used
+## 🔒 Security Notes
 
-* 🔐 Fernet symmetric encryption (AES-128 under the hood)
-* 🧂 PBKDF2 key derivation with a salt
-* 🧵 CLI design with `argparse`
-* 💾 Safe file operations for backup/restore
-* 📂 Tidy code structure with separation of concerns
+* All entries are encrypted using **Fernet symmetric encryption (AES 128 CBC + HMAC)**.
+* The vault is stored locally as an encrypted `.vault` file.
+* No internet access is required — fully offline by design.
+
+---
+## 📜 License
+
+MIT License. Feel free to fork, improve, and use it for personal or educational purposes.
 
 ---
 
-## 📅 Day 2 Goals (Next Steps)
+## 🧠 Author
 
-* Implement Textual-based TUI (Text User Interface)
-* Add clipboard copy feature
-* Optional: Restore from a selected backup
-* Optional: Export vault to plaintext for recovery
+Made by **Devaansh Pathak** as a Python + TUI learning project.
+Inspired by privacy-first tools and minimalist interfaces.
 
 ---
-
-## 👤 Author
-
-Devaansh Pathak

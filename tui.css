@@ -1,20 +1,21 @@
-#main {
-    height: 100%;
-    layout: horizontal;
-}
-
-#sidebar {
-    width: 20%;
-    border: round white;
-    padding: 1;
-}
-
 #main-content {
-    width: 80%;
-    padding: 2;
+    background: black;
+    color: white;
+    padding: 1;
+    border: round white;
+}
+
+.title {
+    text-style: bold;
+    padding: 1;
+    border: round green;
+}
+
+#welcome-msg {
+    color: cyan;
+    text-style: bold;
 }
 
 #form-title {
-    margin-bottom: 1;
-    text-style: bold;
+    color: yellow;
 }
