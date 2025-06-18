@@ -5,3 +5,7 @@ backup/vault_backup.enc
 *.log
 day3.md
 vault_export.csv
+VaultTUI.spec
+utils.py
+/dist
+/build/VaultTUI

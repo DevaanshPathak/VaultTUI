@@ -112,14 +112,17 @@ def set_master_password(old_password: str, new_password: str):
 
     print("🔐 Master password changed successfully.")
 
-def validate_master_password(password: str) -> bool:
-    """Validates entered password against stored hash."""
-    if not PASS_FILE.exists():
-        print("⚠️ No password is set. Use 'set-password' first.")
-        return False
-    with open(PASS_FILE, "r") as f:
-        stored_hash = f.read().strip()
-    return hash_password(password) == stored_hash
+def validate_master_password(pw):
+    if not os.path.exists("vault.key"):
+        print("🔐 No master password set. Setting new password.")
+        hashed = hashlib.sha256(pw.encode()).digest()
+        with open("vault.key", "wb") as f:
+            f.write(base64.urlsafe_b64encode(hashed))
+        return True
+    else:
+        with open("vault.key", "rb") as f:
+            stored = base64.urlsafe_b64decode(f.read())
+        return hashlib.sha256(pw.encode()).digest() == stored
 
 def get_entry(name: str, key: bytes) -> dict | None:
     """Returns a specific entry from the vault by name."""
